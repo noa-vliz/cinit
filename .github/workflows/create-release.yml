@@ -17,6 +17,10 @@ on:
         type: boolean
         default: false
 
+
+permissions:
+  contents: write
+
 jobs:
   build-alpine:
     name: Build Alpine Linux
@@ -66,10 +70,12 @@ jobs:
     name: Create Release
     needs: [build-alpine, build-macos]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
