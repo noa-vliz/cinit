@@ -38,7 +38,7 @@ jobs:
           tar -czf ../cinit-linux-musl-alpine.tar.gz cinit
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cinit-linux-musl-alpine
           path: cinit-linux-musl-alpine.tar.gz
@@ -59,7 +59,7 @@ jobs:
           7z a ../../cinit-windows.zip cinit.exe
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cinit-windows
           path: cinit-windows.zip
@@ -79,7 +79,7 @@ jobs:
           tar -czf ../cinit-macos-x86_64.tar.gz cinit
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cinit-macos-x86_64
           path: cinit-macos-x86_64.tar.gz
