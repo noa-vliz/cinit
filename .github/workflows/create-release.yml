@@ -30,39 +30,18 @@ jobs:
 
       - name: Build with Alpine
         run: |
-          apk add --no-cache build-base cmake git
+          apk add --no-cache build-base cmake git make
           mkdir build && cd build
-          cmake -DCMAKE_EXE_LINKER_FLAGS="-static" ..
+          cmake ..
           make
-          file cinit | grep "statically linked" || echo "Warning: Binary may not be statically linked"
-          tar -czf ../cinit-linux-musl-alpine.tar.gz cinit
+          file initc | grep "statically linked" || echo "Warning: Binary may not be statically linked"
+          tar -czf ../cinit-linux-musl-alpine.tar.gz initc
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: cinit-linux-musl-alpine
           path: cinit-linux-musl-alpine.tar.gz
-
-  build-windows:
-    name: Build Windows
-    runs-on: windows-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Build on Windows
-        run: |
-          mkdir build && cd build
-          cmake ..
-          cmake --build . --config Release
-          cd Release
-          7z a ../../cinit-windows.zip cinit.exe
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cinit-windows
-          path: cinit-windows.zip
 
   build-macos:
     name: Build macOS (x86_64)
@@ -76,7 +55,7 @@ jobs:
           mkdir build && cd build
           cmake -DCMAKE_OSX_ARCHITECTURES="x86_64" ..
           make
-          tar -czf ../cinit-macos-x86_64.tar.gz cinit
+          tar -czf ../cinit-macos-x86_64.tar.gz initc
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -86,7 +65,7 @@ jobs:
 
   release:
     name: Create Release
-    needs: [build-alpine, build-windows, build-macos]
+    needs: [build-alpine, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -100,7 +79,6 @@ jobs:
         with:
           files: |
             cinit-linux-musl-alpine/cinit-linux-musl-alpine.tar.gz
-            cinit-windows/cinit-windows.zip
             cinit-macos-x86_64/cinit-macos-x86_64.tar.gz
           draft: false
           prerelease: false
@@ -110,7 +88,6 @@ jobs:
             
             ## Downloads
             - Linux (Alpine, statically linked with musl): cinit-linux-musl-alpine.tar.gz
-            - Windows: cinit-windows.zip
             - macOS (x86_64): cinit-macos-x86_64.tar.gz
             
             ## Changes
