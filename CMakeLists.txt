@@ -22,6 +22,10 @@ else()
   message(STATUS "glibc detected - using dynamic linking")
 endif()
 
+if(APPLE)
+  set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architectures for macOS" FORCE)
+endif()
+
 include_directories(include)
 
 file(GLOB_RECURSE SRC_FILES src/*.c)
