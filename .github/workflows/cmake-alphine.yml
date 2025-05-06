@@ -1,0 +1,109 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on version tags (e.g., v1.0.0)
+
+jobs:
+  build-alpine:
+    name: Build Alpine Linux
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build with Alpine
+        run: |
+          apk add --no-cache build-base cmake git
+          mkdir build && cd build
+          cmake -DCMAKE_EXE_LINKER_FLAGS="-static" ..
+          make
+          file cinit | grep "statically linked" || echo "Warning: Binary may not be statically linked"
+          tar -czf ../cinit-linux-musl-alpine.tar.gz cinit
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cinit-linux-musl-alpine
+          path: cinit-linux-musl-alpine.tar.gz
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build on Windows
+        run: |
+          mkdir build && cd build
+          cmake ..
+          cmake --build . --config Release
+          cd Release
+          7z a ../../cinit-windows.zip cinit.exe
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cinit-windows
+          path: cinit-windows.zip
+
+  build-macos:
+    name: Build macOS (x86_64)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build on macOS
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_OSX_ARCHITECTURES="x86_64" ..
+          make
+          tar -czf ../cinit-macos-x86_64.tar.gz cinit
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cinit-macos-x86_64
+          path: cinit-macos-x86_64.tar.gz
+
+  release:
+    name: Create Release
+    needs: [build-alpine, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            cinit-linux-musl-alpine/cinit-linux-musl-alpine.tar.gz
+            cinit-windows/cinit-windows.zip
+            cinit-macos-x86_64/cinit-macos-x86_64.tar.gz
+          draft: false
+          prerelease: false
+          name: Release ${{ github.ref_name }}
+          body: |
+            # cinit ${{ github.ref_name }}
+            
+            ## Downloads
+            - Linux (Alpine, statically linked with musl): cinit-linux-musl-alpine.tar.gz
+            - Windows: cinit-windows.zip
+            - macOS (x86_64): cinit-macos-x86_64.tar.gz
+            
+            ## Changes
+            - Feature improvements
+            - Bug fixes
+            
+            For more details, please check the [README](https://github.com/${{ github.repository }}/blob/main/README.md).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
