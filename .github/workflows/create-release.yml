@@ -75,6 +75,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -101,7 +103,13 @@ jobs:
 
       - name: Create Release Notes
         run: |
-          cat > release_notes.md << 'EOL'
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            COMMIT_MSG=$(git log -1 --format=%B ${{ env.RELEASE_TAG }})
+          else
+            COMMIT_MSG=$(git log -1 --format=%B)
+          fi
+          
+          cat > release_notes.md << EOL
           # cinit ${{ env.RELEASE_TAG }}
             
           ## Downloads
@@ -109,8 +117,7 @@ jobs:
           - macOS (x86_64): cinit-macos-x86_64.tar.gz
             
           ## Changes
-          - Feature improvements
-          - Bug fixes
+          ${COMMIT_MSG}
             
           For more details, please check the [README](https://github.com/${{ github.repository }}/blob/main/README.md).
           EOL
