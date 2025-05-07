@@ -23,7 +23,7 @@ int init_project(bool include, const char* generated_cmake)
 	}
 
 	FILE* cmake = fopen("CMakeLists.txt", "w");
-	fprintf(cmake, generated_cmake);
+	fprintf(cmake, "%s", generated_cmake);
 	fclose(cmake);
 
 	FILE* main = fopen("src/main.c", "w");
